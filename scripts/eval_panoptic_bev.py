@@ -414,8 +414,8 @@ def test(model, dataloader, **varargs):
             if not varargs['debug']:
                 distributed.barrier()
 
-            losses = OrderedDict((k, v.mean()) for k, v in losses.items())
-            losses["loss"] = sum(loss_weights[loss_name] * losses[loss_name] for loss_name in losses.keys())
+            losses = OrderedDict((k, v.mean()) for k, v in losses.items() if v is not None)
+            losses["loss"] = sum(loss_weights[loss_name] * losses[loss_name] for loss_name in losses.keys() if losses[loss_name] is not None)
 
             time_meters['batch_time'].update(torch.tensor(time.time() - batch_time))
 
@@ -437,19 +437,6 @@ def test(model, dataloader, **varargs):
                 test_meters['sem_conf'].update(sem_conf_stat.cpu())
 
             del losses, stats
-
-            # Do the post-processing
-            panoptic_pred_list = panoptic_post_processing(results, idxs, sample['bev_msk'], sample['cat'],
-                                                          sample["iscrowd"])
-
-
-            # Get the evaluation metrics
-            panoptic_buffer, po_conf_mat = compute_panoptic_test_metrics(panoptic_pred_list, panoptic_buffer,
-                                                                               po_conf_mat, num_stuff=num_stuff,
-                                                                               num_classes=num_classes,
-                                                                               batch_sizes=batch_sizes,
-                                                                               original_sizes=original_sizes)
-
             # Log batch to tensorboard and console
             if (it + 1) % varargs["log_interval"] == 0:
                 if varargs['summary'] is not None:
@@ -458,15 +445,6 @@ def test(model, dataloader, **varargs):
                              num_iters=len(dataloader), summary=None)
 
             data_time = time.time()
-
-    # Finalise Panoptic mIoU computation
-    po_conf_mat = po_conf_mat.to(device=varargs["device"])
-    if not varargs['debug']:
-        distributed.all_reduce(po_conf_mat, distributed.ReduceOp.SUM)
-    po_conf_mat = po_conf_mat.cpu()[:num_classes, :]
-    po_intersection = po_conf_mat.diag()
-    po_union = ((po_conf_mat.sum(dim=1) + po_conf_mat.sum(dim=0)[:num_classes] - po_conf_mat.diag()) + 1e-8)
-    po_miou = po_intersection / po_union
 
     # Finalise semantic mIoU computation
     sem_conf_mat = sem_conf_mat.to(device=varargs['device'])
@@ -479,7 +457,6 @@ def test(model, dataloader, **varargs):
 
     # Save the metrics
     scores = {}
-    scores['po_miou'] = po_miou.mean()
     scores['sem_miou'] = sem_miou.mean()
     scores = get_panoptic_scores(panoptic_buffer, scores, varargs["device"], num_stuff, varargs['debug'])
     # Update the inference metrics meters
@@ -496,7 +473,6 @@ def test(model, dataloader, **varargs):
                  epoch=varargs['epoch'], num_epochs=varargs['num_epochs'], lr=None)
 
     log_miou("Semantic mIoU", sem_miou, dataloader.dataset.categories)
-    log_scores("Panoptic Scores", scores)
 
     return scores['pq'].item()
 

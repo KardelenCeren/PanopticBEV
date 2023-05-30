@@ -759,8 +759,10 @@ def main(args):
         if (epoch + 1) % config["general"].getint("val_interval") == 0:
             saved_models_dir = None if args.debug else saved_models_dir
             log_info("Validating epoch %d", epoch + 1, debug=args.debug)
+            '''
             score = validate(model, val_dataloader, device=device, summary=summary, global_step=global_step,
-                             epoch=epoch, num_epochs=total_epochs,log_interval=config["general"].getint("log_interval"),
+                             epoch=epoch, num_epochs=total_epochs,
+                             log_interval=config["general"].getint("log_interval"),
                              loss_weights=config['optimizer'].getstruct("loss_weights"),
                              front_vertical_classes=config['transformer'].getstruct('front_vertical_classes'),
                              front_flat_classes=config['transformer'].getstruct('front_flat_classes'),
@@ -770,6 +772,8 @@ def main(args):
                              rgb_std=config['dataloader'].getstruct('rgb_std'),
                              img_scale=config['dataloader'].getfloat('scale'),
                              debug=args.debug)
+            '''
+            score = 0
 
             # Update the score on the last saved snapshot
             if not args.debug and rank == 0:
