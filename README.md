@@ -1,7 +1,7 @@
 # DLAV Project: BEV Semantic Segmentation
 
 ### Group 32: Furkan Güzelant & Kardelen Ceren 
-In this project, we worked on solving BEV Semantic Segmentation task using [PanopticBEV](https://github.com/robot-learning-freiburg/PanopticBEV) as our baseline model. 
+In this project, we worked on solving BEV Semantic Segmentation task using [PanopticBEV](https://arxiv.org/abs/2108.03227) as our baseline model. Repository forked from [here](https://github.com/robot-learning-freiburg/PanopticBEV).
 
 ## 1. Contribution Overview
 
@@ -94,8 +94,7 @@ It can be seen that training the original model with 10 epochs, we attained comp
 
 We observe that training the model with instance segmentation head reduces the semantic segmentation performance. However, using the adapted ResNet as the model's backbone decidedly increases model performance. 
 
-
-![](https://hackmd.io/_uploads/ByxxTmrI3.png)
+![](https://hackmd.io/_uploads/S1YP44rI2.png)
 
 As can be seen in the above graph, in all the experiments, the loss continues to decrease. We expect that if we were to run the same experiments with 30 epochs as the paper suggested, we would get similar or better results. 
 
